@@ -1,0 +1,181 @@
+
+<style>
+  * { box-sizing: border-box; }
+  .quiz-wrap { max-width: 640px; margin: 0 auto; padding: 1.5rem 0; font-family: var(--font-sans); }
+  .progress-bar-bg { height: 6px; background: var(--color-border-tertiary); border-radius: 3px; margin-bottom: 1.5rem; }
+  .progress-bar-fill { height: 6px; background: #7F77DD; border-radius: 3px; transition: width 0.3s ease; }
+  .question-num { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .question-text { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 1.25rem; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+  .option-btn { background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 14px 16px; text-align: left; cursor: pointer; font-size: 14px; color: var(--color-text-primary); line-height: 1.5; transition: border-color 0.15s, background 0.15s; display: flex; align-items: flex-start; gap: 10px; }
+  .option-btn:hover { background: var(--color-background-secondary); border-color: var(--color-border-primary); }
+  .option-btn.selected { border: 1.5px solid #7F77DD; background: #EEEDFE; color: #3C3489; }
+  .option-letter { font-weight: 500; min-width: 20px; color: var(--color-text-secondary); font-size: 13px; padding-top: 1px; }
+  .option-btn.selected .option-letter { color: #534AB7; }
+  .nav-row { display: flex; justify-content: space-between; align-items: center; }
+  .btn-nav { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 8px 20px; font-size: 14px; cursor: pointer; color: var(--color-text-primary); }
+  .btn-nav:hover { background: var(--color-background-secondary); }
+  .btn-nav.primary { background: #534AB7; color: #fff; border-color: #534AB7; }
+  .btn-nav.primary:hover { background: #3C3489; }
+  .btn-nav:disabled { opacity: 0.3; cursor: default; }
+  .result-wrap { padding: 0.5rem 0; }
+  .result-title { font-size: 20px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 0.5rem; }
+  .result-subtitle { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
+  .score-grid { display: grid; gap: 10px; margin-bottom: 1.5rem; }
+  .score-item { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px 16px; }
+  .score-item.winner { border: 1.5px solid #7F77DD; background: #EEEDFE; }
+  .score-label { font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--color-text-secondary); }
+  .score-item.winner .score-label { color: #3C3489; }
+  .score-bar-bg { height: 6px; background: var(--color-border-tertiary); border-radius: 3px; margin-bottom: 4px; }
+  .score-bar-fill { height: 6px; border-radius: 3px; background: #7F77DD; }
+  .score-item.winner .score-bar-fill { background: #534AB7; }
+  .score-num { font-size: 12px; color: var(--color-text-secondary); }
+  .score-item.winner .score-num { color: #534AB7; }
+  .winner-card { background: #EEEDFE; border: 1.5px solid #7F77DD; border-radius: var(--border-radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+  .winner-icon { font-size: 28px; margin-bottom: 8px; }
+  .winner-name { font-size: 18px; font-weight: 500; color: #3C3489; margin-bottom: 4px; }
+  .winner-desc { font-size: 14px; color: #534AB7; line-height: 1.6; }
+  .btn-restart { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 9px 22px; font-size: 14px; cursor: pointer; color: var(--color-text-primary); }
+  .btn-restart:hover { background: var(--color-background-secondary); }
+</style>
+
+<div class="quiz-wrap" id="app"></div>
+
+<script>
+const questions = [
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"A", text:"Eu adoraria receber um e-mail ou torpedo romântico do meu marido."}, b: {letter:"E", text:"Gostaria que meu marido me abraçasse mais."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"B", text:"Gosto de ficar sozinha com meu marido."}, b: {letter:"D", text:"Gostaria que meu marido fizesse alguma tarefa doméstica sem que eu precisasse pedir."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"C", text:"Adoraria que meu marido me trouxesse um presente do tipo \"comprei porque tive vontade\"."}, b: {letter:"B", text:"Gosto de fazer longas viagens com meu marido."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"D", text:"Eu me sentiria muito amada se meu marido lavasse as roupas."}, b: {letter:"E", text:"Gosto quando meu marido me toca."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"E", text:"Gostaria que meu marido me abraçasse de vez em quando."}, b: {letter:"C", text:"Gostaria que meu marido me trouxesse presentes quando viajasse."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"B", text:"Gostaria que meu marido compartilhasse minha paixão por irmos a lugares juntos."}, b: {letter:"E", text:"Gosto de segurar a mão de meu marido."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"C", text:"Sinto-me amada quando meu marido me dá presentes."}, b: {letter:"A", text:"Sei que meu marido me ama, mas gosto de ouvi-lo dizer isso."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"E", text:"Gosto que meu marido se sente perto de mim."}, b: {letter:"A", text:"Gostaria que meu marido sempre me dissesse que estou bonita."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"B", text:"Passar tempo com meu marido me deixa feliz."}, b: {letter:"C", text:"Gostaria que meu marido me desse presentes pequenos, mas significativos."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"A", text:"Gostaria de ouvir meu marido dizer que se orgulha de mim."}, b: {letter:"D", text:"Gostaria que meu marido me ajudasse na limpeza sem que eu precisasse pedir."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"B", text:"Gosto muito de fazer coisas com meu marido, não me importa o que seja."}, b: {letter:"A", text:"Gostaria de ouvir mais palavras de apoio de meu marido."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"D", text:"Gostaria que meu marido fizesse coisas gentis e amáveis pra mim."}, b: {letter:"E", text:"Adoro abraçar meu marido."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"A", text:"Gostaria que meu marido me fizesse elogios com mais frequência."}, b: {letter:"C", text:"Gostaria que meu marido me desse presentes mais bem escolhidos."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"B", text:"O simples fato de estar perto de meu marido faz com que eu me sinta bem."}, b: {letter:"E", text:"Gostaria que meu marido me fizesse uma massagem."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"A", text:"Gostaria que meu marido elogiasse mais as minhas realizações."}, b: {letter:"D", text:"Gostaria que meu marido me ajudasse mais com as tarefas que não aprecio."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"E", text:"Nunca me canso dos beijos de meu marido."}, b: {letter:"B", text:"Gostaria que meu marido demonstrasse mais interesse por coisas que são importantes pra mim."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"D", text:"Sinto-me amada quando meu marido me ajuda em meus projetos."}, b: {letter:"C", text:"Ainda fico entusiasmada quando abro um presente de meu marido."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"A", text:"Gostaria que meu marido me elogiasse quando realizo meus objetivos."}, b: {letter:"B", text:"Gostaria que meu marido me escutasse mais e respeitasse minhas ideias."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"E", text:"Não consigo deixar de tocar meu marido quando ele está perto de mim."}, b: {letter:"D", text:"Gostaria que meu marido se oferecesse para ajudar nas tarefas."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"D", text:"Eu ficaria muito feliz se meu marido me ajudasse com as coisas da casa."}, b: {letter:"C", text:"Eu me sentiria amada se os presentes de meu marido demonstrassem atenção para comigo."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"B", text:"Gostaria que meu marido me desse atenção total quando conversamos."}, b: {letter:"D", text:"Gostaria muito que meu marido me ajudasse a limpar a casa."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"C", text:"Estou ansiosa para saber o que meu marido me dará de presente no meu aniversário."}, b: {letter:"A", text:"Quero ouvir meu marido dizer quão importante sou para ele."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"C", text:"Gostaria que meu marido me desse presentes com mais frequência."}, b: {letter:"D", text:"Gostaria que meu marido me ajudasse sem que eu precisasse pedir."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"B", text:"Fico chateada quando meu marido me interrompe."}, b: {letter:"C", text:"Nunca me canso de receber presentes de meu marido."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"D", text:"Gostaria que meu marido se oferecesse para me ajudar quando eu estiver cansada."}, b: {letter:"B", text:"Gosto de ir a qualquer lugar com meu marido."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"E", text:"Gostaria que meu marido e eu nos afagássemos com mais frequência."}, b: {letter:"C", text:"Gostaria que meu marido me surpreendesse mais frequentemente com presentes."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"A", text:"Os incentivos de meu marido me dão confiança."}, b: {letter:"B", text:"Adoro assistir filmes com meu marido."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"C", text:"Gostaria que meu marido me desse um presente fora de alguma ocasião especial."}, b: {letter:"E", text:"Gostaria muito que meu marido me tocasse mais."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"D", text:"O fato de meu marido me ajudar é muito significativo para mim."}, b: {letter:"A", text:"Gostaria que meu marido dissesse: \"gosto de você\"."} },
+  { q: "Marque a alternativa que mais representa você:", a: {letter:"E", text:"Adoro abraçar meu marido quando ele chega em casa."}, b: {letter:"A", text:"Quero ouvir meu marido dizer que sente minha falta quando sai."} }
+];
+
+const profiles = {
+  A: { name: "Palavras de afirmação", icon: "💬", desc: "Você se sente amada quando recebe elogios, palavras encorajadoras e expressões verbais de carinho. Ouvir \"eu te amo\" e palavras de apoio é fundamental para você." },
+  B: { name: "Tempo de qualidade", icon: "⏳", desc: "Você valoriza profundamente a atenção total e exclusiva do seu marido. Estar junto, compartilhar momentos e sentir que é prioridade faz toda a diferença." },
+  C: { name: "Receber presentes", icon: "🎁", desc: "Presentes simbolizam amor e atenção para você. Não é sobre o valor material, mas o gesto de pensar em você e demonstrar isso com um presente especial." },
+  D: { name: "Atos de serviço", icon: "🤝", desc: "Ações falam mais alto que palavras. Quando seu marido ajuda nas tarefas e alivia sua carga, você sente profundamente que é amada e valorizada." },
+  E: { name: "Toque físico", icon: "❤", desc: "Abraços, beijos, carinhos e o toque físico são sua principal forma de conexão emocional. O contato físico comunica amor, segurança e proximidade." }
+};
+
+let current = 0;
+let answers = new Array(30).fill(null);
+
+function render() {
+  const app = document.getElementById('app');
+  if (current < questions.length) {
+    renderQuestion(app);
+  } else {
+    renderResult(app);
+  }
+}
+
+function renderQuestion(app) {
+  const q = questions[current];
+  const sel = answers[current];
+  const pct = Math.round((current / questions.length) * 100);
+  app.innerHTML = `
+    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+    <div class="question-num">Pergunta ${current + 1} de ${questions.length}</div>
+    <div class="question-text">${current + 1}. ${q.q}</div>
+    <div class="options">
+      <button class="option-btn${sel === 'a' ? ' selected' : ''}" onclick="select('a')">
+        <span class="option-letter">${q.a.letter}</span>
+        <span>${q.a.text}</span>
+      </button>
+      <button class="option-btn${sel === 'b' ? ' selected' : ''}" onclick="select('b')">
+        <span class="option-letter">${q.b.letter}</span>
+        <span>${q.b.text}</span>
+      </button>
+    </div>
+    <div class="nav-row">
+      <button class="btn-nav" onclick="go(-1)" ${current === 0 ? 'disabled' : ''}>← Anterior</button>
+      <button class="btn-nav primary" onclick="go(1)" ${sel === null ? 'disabled' : ''}>${current === questions.length - 1 ? 'Ver resultado →' : 'Próxima →'}</button>
+    </div>
+  `;
+}
+
+function renderResult(app) {
+  const scores = {A:0, B:0, C:0, D:0, E:0};
+  for (let i = 0; i < questions.length; i++) {
+    if (answers[i] === 'a') scores[questions[i].a.letter]++;
+    else if (answers[i] === 'b') scores[questions[i].b.letter]++;
+  }
+  const max = Math.max(...Object.values(scores));
+  const winner = Object.keys(scores).find(k => scores[k] === max);
+  const total = questions.length;
+  const order = Object.entries(scores).sort((a,b) => b[1]-a[1]);
+  const p = profiles[winner];
+
+  app.innerHTML = `
+    <div class="result-wrap">
+      <div class="result-title">Resultado do teste</div>
+      <div class="result-subtitle">Sua linguagem do amor predominante é:</div>
+      <div class="winner-card">
+        <div class="winner-icon">${p.icon}</div>
+        <div class="winner-name">${p.name}</div>
+        <div class="winner-desc">${p.desc}</div>
+      </div>
+      <div class="score-grid">
+        ${order.map(([letter, score]) => {
+          const pf = profiles[letter];
+          const pct = Math.round((score / total) * 100);
+          const isWinner = letter === winner;
+          return `<div class="score-item${isWinner ? ' winner' : ''}">
+            <div class="score-label">${pf.icon} ${pf.name}</div>
+            <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%"></div></div>
+            <div class="score-num">${score} ponto${score !== 1 ? 's' : ''} (${pct}%)</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="btn-restart" onclick="restart()">↺ Refazer o teste</button>
+    </div>
+  `;
+}
+
+function select(choice) {
+  answers[current] = choice;
+  render();
+}
+
+function go(dir) {
+  current += dir;
+  if (current >= questions.length) {
+    current = questions.length;
+  }
+  render();
+}
+
+function restart() {
+  current = 0;
+  answers = new Array(30).fill(null);
+  render();
+}
+
+render();
+</script>
